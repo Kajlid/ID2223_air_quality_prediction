@@ -105,7 +105,7 @@ def main():
 
     aqi_fg = fs.get_or_create_feature_group(
         name="air_quality",
-        description="Air Quality characteristics of each day for {CITY_NAME} ({SENSOR['display_name']})",
+        description=f"Air Quality characteristics of each day for {CITY_NAME} ({SENSOR['display_name']})",
         version=FG_VERSIONS["air_quality"],
         primary_key=["datetime"],        
         event_time="datetime"
