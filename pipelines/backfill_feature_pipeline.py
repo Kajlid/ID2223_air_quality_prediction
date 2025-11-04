@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import os
 import json
 import time
+from dotenv import load_dotenv
 
 MAX_RETRIES = 3
 WAIT_SECONDS = 5  # wait between retries
@@ -23,6 +24,20 @@ def fetch_json(url):
             else:
                 raise RuntimeError(f"Failed to fetch data after {MAX_RETRIES} attempts.")
             
+def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove whitespaces in beginning of column names to make sure they are compatible Hopsworks"""
+    df.columns = (
+        df.columns
+        .str.strip()            
+        .str.lower()            # lowercase everything
+        .str.replace(" ", "_")  # replace spaces with underscores
+    )
+    # Hopsworks requires names to start with a letter:
+    df.columns = [
+        col if col[0].isalpha() else f"f_{col.lstrip('_')}"
+        for col in df.columns
+    ]
+    return df
 
 def main():
     with open("city_config/gothenburg_femman.json") as f:
@@ -34,7 +49,9 @@ def main():
     SENSOR = city_config["sensors"][0]  # only one station
     FG_VERSIONS = city_config["fg_versions"]
 
-    project = hopsworks.login()  
+    load_dotenv()
+    hopsworks_key = os.getenv("HOPSWORKS_API_KEY")
+    project = hopsworks.login(api_key_value=hopsworks_key)  
     fs = project.get_feature_store()
 
     START_DATE = "2019-11-01"
@@ -64,7 +81,12 @@ def main():
     weather_df.drop(columns=["time"], inplace=True)
 
     aqi_csv_path = "data/goteborg-femman-air-quality.csv"  # CSV for Femman
-    aqi_df = pd.read_csv(aqi_csv_path)
+    # aqi_df = pd.read_csv(aqi_csv_path)
+    aqi_df = (
+    pd.read_csv(aqi_csv_path)
+    .pipe(clean_column_names)
+    )
+    
     aqi_df["datetime"] = pd.to_datetime(aqi_df["date"])    # rename column to datetime
     aqi_df.drop(columns=["date"], inplace=True)
 
