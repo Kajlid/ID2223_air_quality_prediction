@@ -1,0 +1,25 @@
+{
+  "city_name": "Stockholm",
+  "city_lat": 59.3293,
+  "city_lon": 18.0686,
+  "sensors": [
+    {
+      "id": "CHANGE_ME_SENSOR_ID_1",
+      "display_name": "Sensor 1"
+    },
+    {
+      "id": "CHANGE_ME_SENSOR_ID_2",
+      "display_name": "Sensor 2"
+    }
+  ],
+  "forecast_days": 7,
+  "fg_versions": {
+    "weather": 1,
+    "air_quality": 1
+  },
+  "feature_view": {
+    "name": "air_quality_fv",
+    "version": 1
+  },
+  "model_registry_name": "air_quality_model"
+}

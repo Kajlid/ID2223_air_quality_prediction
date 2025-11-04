@@ -1,0 +1,51 @@
+name: air-quality-daily
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "11 6 * * *"
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Feature backfill (manual)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: |
+          python pipelines/feature_daily_pipeline.py --city-config city_config/stockholm.json --backfill 1
+      - name: Daily features
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: |
+          python pipelines/feature_daily_pipeline.py --city-config city_config/stockholm.json
+      - name: Training pipeline
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: |
+          python pipelines/training_pipeline.py --feature-view-version 1
+      - name: Batch inference
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: |
+          python pipelines/batch_inference_pipeline.py --city-config city_config/stockholm.json
+      - name: Generate dashboard
+        run: |
+          python dashboard/generate_dashboard.py --city-config city_config/stockholm.json --out-dir docs
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

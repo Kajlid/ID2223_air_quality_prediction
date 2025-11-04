@@ -1,0 +1,13 @@
+hopsworks>=3.6.0
+hsfs>=3.6.0
+pandas>=2.2.2
+numpy>=1.26.4
+requests>=2.32.3
+python-dateutil>=2.9.0.post0
+scikit-learn>=1.5.2
+xgboost>=2.1.1
+matplotlib>=3.9.2
+joblib>=1.4.2
+pyyaml>=6.0.2
+tqdm>=4.66.5
+great_expectations>=0.18.12

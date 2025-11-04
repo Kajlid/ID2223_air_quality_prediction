@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv
+venv/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+.vscode/
+artifacts/
+docs/pm25_*.png
+data/
