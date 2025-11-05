@@ -1,0 +1,21 @@
+{
+  "city_name": "Göteborg Femman",
+  "city_lat": 57.70805758067377,     
+  "city_lon": 11.969179894601,
+  "sensors": [
+    {
+      "id": "FEMMAN_SENSOR_ID",
+      "display_name": "Göteborg Femman"
+    }
+  ],
+  "forecast_days": 7,
+  "fg_versions": {
+    "weather": 1,
+    "air_quality": 1
+  },
+  "feature_view": {
+    "name": "air_quality_fv",
+    "version": 1
+  },
+  "model_registry_name": "air_quality_model"
+}
