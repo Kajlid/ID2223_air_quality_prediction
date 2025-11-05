@@ -14,7 +14,7 @@ def fetch_json(url):
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             resp = requests.get(url, timeout=60)
-            resp.raise_for_status()  # raise exception for 4xx/5xx
+            resp.raise_for_status()  
             return resp.json()
         except requests.exceptions.RequestException as e:
             print(f"Attempt {attempt} failed: {e}")
@@ -25,7 +25,7 @@ def fetch_json(url):
                 raise RuntimeError(f"Failed to fetch data after {MAX_RETRIES} attempts.")
             
 def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
-    """Remove whitespaces in beginning of column names to make sure they are compatible Hopsworks"""
+    """Remove whitespaces in beginning of column names to make sure they are compatible with Hopsworks"""
     df.columns = (
         df.columns
         .str.strip()            
@@ -57,13 +57,6 @@ def main():
     START_DATE = "2019-11-01"
     END_DATE = "2025-11-01"
 
-    # air_quality_url = (
-    #     f"https://open-meteo.com/en/docs/air-quality-api?"
-    #     f"latitude={LAT}&longitude={LON}"
-    #     f"&past_days={92}"
-    #     f"&hourly=pm2_5"       # target variable
-    # )
-
     # features
     historical_weather_url = (
         f"https://archive-api.open-meteo.com/v1/archive?"
@@ -81,7 +74,6 @@ def main():
     weather_df.drop(columns=["time"], inplace=True)
 
     aqi_csv_path = "data/goteborg-femman-air-quality.csv"  # CSV for Femman
-    # aqi_df = pd.read_csv(aqi_csv_path)
     aqi_df = (
     pd.read_csv(aqi_csv_path)
     .pipe(clean_column_names)
