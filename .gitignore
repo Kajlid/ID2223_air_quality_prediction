@@ -11,3 +11,4 @@ Thumbs.db
 artifacts/
 docs/pm25_*.png
 data/
+logs/
