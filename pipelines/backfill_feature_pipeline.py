@@ -78,11 +78,13 @@ def main():
     pd.read_csv(aqi_csv_path)
     .pipe(clean_column_names)
     )
+    aqi_df = aqi_df[["date", "pm25"]] 
+    aqi_df.rename(columns={"pm25": "pm2_5", "date": "datetime"}, inplace=True)  # rename column to datetime
     
-    aqi_df["datetime"] = pd.to_datetime(aqi_df["date"])    # rename column to datetime
-    aqi_df.drop(columns=["date"], inplace=True)
+    aqi_df["datetime"] = pd.to_datetime(aqi_df["datetime"])       # convert to datetime
+    # aqi_df.drop(columns=["date"], inplace=True)
 
-    # Add sensor id as a column
+    # Add sensor id and sensor name as columns
     aqi_df["sensor_id"] = SENSOR["id"]
     aqi_df["sensor_name"] = SENSOR["display_name"]
 

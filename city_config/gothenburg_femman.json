@@ -11,7 +11,7 @@
   "forecast_days": 7,
   "fg_versions": {
     "weather": 1,
-    "air_quality": 1
+    "air_quality": 2
   },
   "feature_view": {
     "name": "air_quality_fv",
