@@ -1,6 +1,6 @@
 hopsworks>=3.6.0
 hsfs>=3.6.0
-pandas>=2.2.2
+pandas>=2.1.4,<2.2.0
 numpy>=1.26.4
 requests>=2.32.3
 python-dateutil>=2.9.0.post0
