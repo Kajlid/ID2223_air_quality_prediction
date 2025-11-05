@@ -1,5 +1,4 @@
-hopsworks>=3.6.0
-hsfs>=3.6.0
+hopsworks[python]>=3.6.0
 pandas>=2.1.4,<2.2.0
 numpy>=1.26.4
 requests>=2.32.3
@@ -11,3 +10,4 @@ joblib>=1.4.2
 pyyaml>=6.0.2
 tqdm>=4.66.5
 great_expectations>=0.18.12
+jupyter>=1.1.1
