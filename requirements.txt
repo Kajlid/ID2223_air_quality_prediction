@@ -1,4 +1,4 @@
-hopsworks>=3.6.0
+hopsworks[python]>=3.6.0
 hsfs>=3.6.0
 pandas>=2.1.4,<2.2.0
 numpy>=1.26.4
