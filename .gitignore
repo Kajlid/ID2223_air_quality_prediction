@@ -10,5 +10,4 @@ Thumbs.db
 .vscode/
 artifacts/
 docs/pm25_*.png
-data/
 logs/
