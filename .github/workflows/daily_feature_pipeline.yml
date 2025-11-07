@@ -1,8 +1,8 @@
-name: Daily Feature Pipeline
+name: air-quality-daily
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # runs daily at 06:00 UTC
+    - cron: "11 6 * * *"   # runs daily at 06:59 UTC
   workflow_dispatch:      # allows manual runs
 
 jobs:
@@ -29,5 +29,5 @@ jobs:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
         # run: python scripts/run_feature_pipeline.py
         run: |
-            cd notebooks
+            cd pipelines
             jupyter nbconvert --to notebook --execute 2_air_quality_feature_pipeline.ipynb

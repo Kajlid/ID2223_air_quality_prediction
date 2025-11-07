@@ -7,6 +7,7 @@ import json
 import time
 import numpy as np
 from dotenv import load_dotenv
+import great_expectations as ge
 
 MAX_RETRIES = 3
 WAIT_SECONDS = 5  # wait between retries
@@ -40,6 +41,24 @@ def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
     ]
     return df
 
+def validate_with_expectations(df, expectation_suite, name="dataset"):
+    """
+    Run Great Expectations validation before ingestion.
+    Prints results and raises an error if validation fails.
+    """
+    ge_df = ge.from_pandas(df)
+    validation_result = ge_df.validate(expectation_suite=expectation_suite)
+    
+    if not validation_result.success:
+        print(f"Validation failed for {name}")
+        for res in validation_result.results:
+            if not res.success:
+                print(f" - {res.expectation_config.expectation_type} failed: {res.result}")
+        raise ValueError(f"Validation failed for {name}. Check the data.")
+    else:
+        print(f"Validation passed for {name}")
+
+
 def main():
     with open("city_config/gothenburg_femman.json") as f:
         city_config = json.load(f)
@@ -52,73 +71,143 @@ def main():
 
     load_dotenv()
     hopsworks_key = os.getenv("HOPSWORKS_API_KEY")
-    project = hopsworks.login(api_key_value=hopsworks_key)  
+    hopsworks_project = os.getenv("HOPSWORKS_PROJECT")
+    project = hopsworks.login(project=hopsworks_project, api_key_value=hopsworks_key)  
     fs = project.get_feature_store()
 
-    START_DATE = "2019-11-01"
-    END_DATE = "2025-11-01"
+    # Last 6 years
+    START_DATE = "2019-11-06"
+    END_DATE = "2025-11-06"
 
-    # features
+    # Features
     historical_weather_url = (
         f"https://archive-api.open-meteo.com/v1/archive?"
         f"latitude={LAT}&longitude={LON}"
         f"&start_date={START_DATE}"
         f"&end_date={END_DATE}"
-        f"&hourly=wind_speed_100m,wind_direction_100m,wind_gusts_10m,wind_direction_10m,wind_speed_10m,temperature_2m"
+        f"&daily=wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,temperature_2m_max"
+        "&timezone=Europe%2FBerlin"    # same timezone as Sweden     
     )
 
     weather_data = fetch_json(historical_weather_url)
 
-    weather_df = pd.DataFrame(weather_data["hourly"])
+    weather_df = pd.DataFrame(weather_data["daily"])
     print(f"Fetched {len(weather_df)} weather records")
-    weather_df["datetime"] = pd.to_datetime(weather_df["time"])
+    weather_df["date"] = pd.to_datetime(weather_df["time"], yearfirst=True)
+    weather_df["country"] = os.getenv("AQICN_COUNTRY")
+    weather_df["city"] = os.getenv("AQICN_CITY")
+    weather_df["street"] = os.getenv("AQICN_STREET")
     weather_df.drop(columns=["time"], inplace=True)
+    
+    # Data validation
+    weather_expectation_suite = ge.core.ExpectationSuite(
+        expectation_suite_name="weather_expectation_suite"
+    )
+
+    # Check for null values
+    weather_expectation_suite.add_expectation(
+        ge.core.ExpectationConfiguration(
+            expectation_type="expect_column_values_to_not_be_null",
+            kwargs={"column": "temperature_2m_max"}
+        )
+    )
+
+    # Check for reasonable range
+    weather_expectation_suite.add_expectation(
+        ge.core.ExpectationConfiguration(
+            expectation_type="expect_column_values_to_be_between",
+            kwargs={
+                "column": "temperature_2m_max",
+                "min_value": -60.0,
+                "max_value": 60.0
+            }
+        )
+    )
 
     aqi_csv_path = "data/goteborg-femman-air-quality.csv"  # CSV for Femman
-    aqi_df = (
+    df_aq = (
     pd.read_csv(aqi_csv_path)
     .pipe(clean_column_names)
     )
-    aqi_df = aqi_df[["date", "pm25"]] 
-    aqi_df.rename(columns={"pm25": "pm2_5", "date": "datetime"}, inplace=True)  # rename column to datetime
+    df_aq = df_aq[["date", "pm25"]] 
+    df_aq.rename(columns={"pm25": "pm2_5", "date": "date"}, inplace=True)  
     
-    # Remove missing rows
-    aqi_df["pm2_5"].replace(" ", np.nan, inplace=True)  
-    # aqi_df["pm2_5"] = aqi_df["pm2_5"].fillna(0).astype(float)
-    # aqi_df = aqi_df.dropna(subset=["pm2_5"])
+    # Replace missing rows with nan
+    df_aq["pm2_5"].replace(" ", np.nan, inplace=True)  
     
-    # convert to from string to double
-    aqi_df["pm2_5"] = aqi_df["pm2_5"].astype(float) 
-    # missing PM2.5 values are filled from the nearest available measurement
-    aqi_df["pm2_5"].interpolate(method='nearest', inplace=True)
-    aqi_df["datetime"] = pd.to_datetime(aqi_df["datetime"])       # convert to datetime   
-    # aqi_df.drop(columns=["date"], inplace=True)
+    # Make sure the value is a double
+    df_aq["pm2_5"] = df_aq["pm2_5"].astype(float) 
+    
+    # Missing PM2.5 values are filled from the nearest available measurement
+    # df_aq["pm2_5"].interpolate(method='nearest', inplace=True)
+    df_aq.dropna(inplace=True)
+    df_aq["date"] = pd.to_datetime(df_aq["date"], yearfirst=True)       # convert to datetime   
+    # df_aq.drop(columns=["date"], inplace=True)
 
-    # Add sensor id and sensor name as columns
-    aqi_df["sensor_id"] = SENSOR["id"]
-    aqi_df["sensor_name"] = SENSOR["display_name"]
+    # Add location information as columns
+    df_aq["country"] = os.getenv("AQICN_COUNTRY")
+    df_aq["city"] = os.getenv("AQICN_CITY")
+    df_aq["street"] = os.getenv("AQICN_STREET")   # does not have to be an actual street, just a location
+    
+    # Data validation
+    aq_expectation_suite = ge.core.ExpectationSuite(
+        expectation_suite_name="aq_expectation_suite"
+    )
+    
+    # Check for null values
+    aq_expectation_suite.add_expectation(
+        ge.core.ExpectationConfiguration(
+            expectation_type="expect_column_values_to_not_be_null",
+            kwargs={"column": "pm2_5"}
+        )
+    )
+
+    # Check for reasonable PM2.5 range
+    aq_expectation_suite.add_expectation(
+        ge.core.ExpectationConfiguration(
+            expectation_type="expect_column_values_to_be_between",
+            kwargs={
+                "column": "pm2_5",
+                "min_value": 0.0,
+                "max_value": 500.0,
+                "strict_min": True
+            }
+        )
+    )     
+    
+    # Align both datasets by overlapping dates (keep only dates that are in both dataframes)
+    common_dates = set(weather_df["date"]).intersection(df_aq["date"])
+    weather_df = weather_df[weather_df["date"].isin(common_dates)]
+    df_aq = df_aq[df_aq["date"].isin(common_dates)]
+    
+    print(f"Aligned datasets: {len(common_dates)} common days found")
 
     # Register as feature groups:
     weather_fg = fs.get_or_create_feature_group(
-        name="weather",
+        name='weather',
+        description='Historical daily weather observations and weather forecasts',
         version=FG_VERSIONS["weather"],
-        description=f"Historical weather data for {CITY_NAME}",
-        primary_key=["datetime"],
-        event_time="datetime"
+        primary_key=['city'],
+        event_time="date",
+        expectation_suite = weather_expectation_suite
     )
 
-    aqi_fg = fs.get_or_create_feature_group(
-        name="air_quality",
-        description=f"Air Quality characteristics of each day for {CITY_NAME} ({SENSOR['display_name']})",
+    air_quality_fg = fs.get_or_create_feature_group(
+        name='air_quality',
+        description=f"Air Quality observations daily for {CITY_NAME} ({SENSOR['display_name']})",
         version=FG_VERSIONS["air_quality"],
-        primary_key=["datetime"],        
-        event_time="datetime"
+        primary_key=['city'],
+        expectation_suite = aq_expectation_suite,
+        event_time="date",
     )
-
+    
+    # Validate data locally before ingestion
+    validate_with_expectations(weather_df, weather_expectation_suite, name="weather data")
+    validate_with_expectations(df_aq, aq_expectation_suite, name="air quality data")
 
     # Backfill historical data:
-    weather_fg.insert(weather_df, write_options={"wait_for_job": False})
-    aqi_fg.insert(aqi_df, write_options={"wait_for_job": False})
+    weather_fg.insert(weather_df)
+    air_quality_fg.insert(df_aq)
 
     print(f"Backfill complete! Feature Groups for {CITY_NAME} registered.")
 
