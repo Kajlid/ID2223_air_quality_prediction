@@ -63,7 +63,6 @@ def main():
     with open("city_config/gothenburg_femman.json") as f:
         city_config = json.load(f)
 
-    CITY_NAME = city_config["city_name"]
     LAT = city_config["city_lat"]
     LON = city_config["city_lon"]
     SENSOR = city_config["sensors"][0]  # only one station
@@ -194,7 +193,7 @@ def main():
 
     air_quality_fg = fs.get_or_create_feature_group(
         name='air_quality',
-        description=f"Air Quality observations daily for {CITY_NAME} ({SENSOR['display_name']})",
+        description=f"Air Quality observations daily for {SENSOR['display_name']}",
         version=FG_VERSIONS["air_quality"],
         primary_key=['city'],
         expectation_suite = aq_expectation_suite,
@@ -209,7 +208,7 @@ def main():
     weather_fg.insert(weather_df)
     air_quality_fg.insert(df_aq)
 
-    print(f"Backfill complete! Feature Groups for {CITY_NAME} registered.")
+    print(f"Backfill complete! Feature Groups for {SENSOR['display_name']} registered.")
 
 
 if __name__ == "__main__":
