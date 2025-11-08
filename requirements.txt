@@ -2,10 +2,16 @@ hopsworks[python]>=3.6.0
 pandas>=2.1.4,<2.2.0
 numpy>=1.26.4
 requests>=2.32.3
+retry-requests==2.0.0
+openmeteo-requests
+requests-cache==1.2.0
 python-dateutil>=2.9.0.post0
 scikit-learn>=1.5.2
 xgboost>=2.1.1
 matplotlib>=3.9.2
+streamlit==1.28.2
+pydantic-settings>=2.6.1
+geopy==2.4.1
 joblib>=1.4.2
 pyyaml>=6.0.2
 tqdm>=4.66.5
