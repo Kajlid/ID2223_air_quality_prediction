@@ -4,11 +4,11 @@
   "city_lon": 18.0686,
   "sensors": [
     {
-      "id": "CHANGE_ME_SENSOR_ID_1",
+      "id": "STOCKHOLM_SENSOR_ID_1",
       "display_name": "Sensor 1"
     },
     {
-      "id": "CHANGE_ME_SENSOR_ID_2",
+      "id": "STOCKHOLM_SENSOR_ID_2",
       "display_name": "Sensor 2"
     }
   ],
