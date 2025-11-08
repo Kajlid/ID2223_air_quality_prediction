@@ -6,7 +6,7 @@ import os
 import json
 import time
 import numpy as np
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import great_expectations as ge
 
 MAX_RETRIES = 3
@@ -69,7 +69,7 @@ def main():
     SENSOR = city_config["sensors"][0]  # only one station
     FG_VERSIONS = city_config["fg_versions"]
 
-    load_dotenv()
+    # load_dotenv()
     hopsworks_key = os.getenv("HOPSWORKS_API_KEY")
     hopsworks_project = os.getenv("HOPSWORKS_PROJECT")
     project = hopsworks.login(project=hopsworks_project, api_key_value=hopsworks_key)  
