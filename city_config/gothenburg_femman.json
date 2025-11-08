@@ -1,5 +1,7 @@
 {
-  "city_name": "Göteborg Femman",
+  "country_name": "Sweden", 
+  "city_name": "Göteborg",
+  "street_name": "Femman",
   "city_lat": 57.70805758067377,     
   "city_lon": 11.969179894601,
   "sensors": [
