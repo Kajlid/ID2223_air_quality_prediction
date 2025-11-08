@@ -27,6 +27,10 @@ jobs:
       - name: run feature pipeline
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT: ${{ secrets.HOPSWORKS_PROJECT }}
+          AQICN_COUNTRY: ${{ secrets.AQICN_COUNTRY}}
+          AQICN_CITY: ${{ secrets.AQICN_CITY}}
+          AQICN_STREET: ${{ secrets.AQICN_STREET}}
         # run: python scripts/run_feature_pipeline.py
         run: |
             cd pipelines
