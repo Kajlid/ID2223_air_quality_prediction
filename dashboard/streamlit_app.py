@@ -7,11 +7,13 @@ from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
 from pathlib import Path
 import datetime
+import pytz
 import sys
 sys.path.append(".")
 import util
 
-today = pd.Timestamp(datetime.datetime.now().date())
+berlin_tz = pytz.timezone("Europe/Berlin")
+today = pd.Timestamp(datetime.datetime.now().date(), tz=berlin_tz)
 today_str = today.strftime("%Y-%m-%d")
 
 st.title("Air Quality Forecast Dashboard")
@@ -81,28 +83,36 @@ forecast_df['date'] = pd.date_range(
 # Reset days_before_forecast_day to start from 0 (tomorrow)
 # forecast_df['days_before_forecast_day'] = range(0, forecast_horizon)
 
-
 # Plot forecast
 fig = util.plot_air_quality_forecast(city, street, forecast_df, f"air_quality_model/daily_plots/forecast_{today_str}.png")  # saves the plot
 st.pyplot(fig)
 
-st.write("### Forecast Data")
-st.dataframe(forecast_df[['date', 'predicted_pm25']])
+forecast_df = forecast_df.rename(columns={"date": "Date", "predicted_pm25": "Predicted PM2.5"})
 
-if st.checkbox("Show Hindcast (1-day prior predictions vs actual)"):
-    monitor_fg = fs.get_feature_group(name="aq_predictions", version=1)
+st.write("### Forecast Data")
+st.dataframe(forecast_df.reset_index(drop=True)[['Date', 'Predicted PM2.5']].sort_values(["Date"], ascending=True))
+
+if st.checkbox("Show Hindcast (1-day prior predictions vs actual PM2.5 readings)"):
     monitoring_df = monitor_fg.filter(monitor_fg.days_before_forecast_day == 1).read()
+    
+    monitoring_df = monitor_fg.filter(
+        (monitor_fg.days_before_forecast_day >= 1) & 
+        (monitor_fg.days_before_forecast_day <= forecast_days)
+    ).read()
     
     air_quality_fg = fs.get_feature_group(name="air_quality", version=1)
     air_quality_df = air_quality_fg.read()
     outcome_df = air_quality_df[['date', 'pm2_5']]
+    outcome_df = outcome_df[outcome_df['date'] <= today]  # because there were placeholder values in the original data for future dates
     preds_df = monitoring_df[['date', 'predicted_pm25']]
     
     hindcast_df = pd.merge(preds_df, outcome_df, on="date", how="inner")
-    hindcast_df = hindcast_df.sort_values("date")
+    hindcast_df = hindcast_df.sort_values(["date"], ascending=True)
+    hindcast_df = hindcast_df.rename(columns={"date": "Date", "predicted_pm25": "Predicted PM2.5", "pm2_5": "PM2.5"})
     
     st.write("### Hindcast Data")
-    st.dataframe(hindcast_df)
+    st.dataframe(hindcast_df.reset_index(drop=True))
     
-    fig2 = util.plot_air_quality_forecast(city, street, hindcast_df, f"air_quality_model/daily_plots/hindcast_{today_str}.png", hindcast=True)
+    hindcast_df_plot = hindcast_df.rename(columns={"Date": "date", "Predicted PM2.5":"predicted_pm25", "PM2.5":"pm2_5"})
+    fig2 = util.plot_air_quality_forecast(city, street, hindcast_df_plot, f"air_quality_model/daily_plots/hindcast_{today_str}.png", hindcast=True)
     st.pyplot(fig2)
