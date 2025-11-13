@@ -1,0 +1,31 @@
+{
+  "region_name": "Västra Götaland",
+  "country_name": "Sweden",
+  "sensors": [
+    {
+      "id": "GBG_FEMMAN",
+      "display_name": "Göteborg Femman",
+      "lat": 57.70805758067377,
+      "lon": 11.969179894601
+    },
+    {
+      "id": "GBG_LUNDEN",
+      "display_name": "Göteborg Lunden",
+      "lat": 57.726,
+      "lon": 12.004
+    },
+    {
+      "id": "BORAS_CENTER",
+      "display_name": "Borås Centrum",
+      "lat": 57.721,
+      "lon": 12.940
+    }
+  ],
+  "forecast_days": 7,
+  "fg_versions": {
+    "weather": 1,
+    "air_quality": 1,
+    "weather_forecast_features": 1,
+    "aq_predictions": 1
+  }
+}
