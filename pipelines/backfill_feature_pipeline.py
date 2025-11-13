@@ -186,7 +186,7 @@ def main():
         name='weather',
         description='Historical daily weather observations and weather forecasts',
         version=FG_VERSIONS["weather"],
-        primary_key=['city'],
+        primary_key=['city', 'street', 'date'],
         event_time="date",
         expectation_suite = weather_expectation_suite
     )
@@ -195,7 +195,7 @@ def main():
         name='air_quality',
         description=f"Air Quality observations daily for {SENSOR['display_name']}",
         version=FG_VERSIONS["air_quality"],
-        primary_key=['city'],
+        primary_key=['city', 'street', 'date'],
         expectation_suite = aq_expectation_suite,
         event_time="date",
     )

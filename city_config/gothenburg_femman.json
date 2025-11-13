@@ -19,7 +19,7 @@
   },
   "feature_view": {
     "name": "air_quality_fv",
-    "version": 1
+    "version": 2
   },
   "model_registry": {
     "name": "air_quality_xgboost_model",
