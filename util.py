@@ -290,11 +290,47 @@ def check_file_path(file_path):
 def backfill_predictions_for_monitoring(weather_fg, air_quality_df, monitor_fg, model):
     features_df = weather_fg.read()
     features_df = features_df.sort_values(by=['date'], ascending=True)
-    features_df = features_df.tail(10)
-    features_df['predicted_pm25'] = model.predict(features_df[['temperature_2m_mean', 'precipitation_sum', 'wind_speed_10m_max', 'wind_direction_10m_dominant']])
-    df = pd.merge(features_df, air_quality_df[['date','pm2_5','street','country']], on="date")
-    df['days_before_forecast_day'] = 1
-    hindcast_df = df
-    df = df.drop('pm2_5', axis=1)
-    monitor_fg.insert(df, write_options={"wait_for_job": True})
+    features_df = features_df.tail(10)    # last 10 days
+    
+    # Compute lag features from historical air quality
+    air_quality_df = air_quality_df.sort_values(by=['city', 'street', 'date'])
+    for lag in [1, 2, 3]:
+        air_quality_df[f'pm2_5_lag_{lag}'] = air_quality_df.groupby(['city', 'street'])['pm2_5'].shift(lag)
+    
+    print("FEATURES_DF COLUMNS:", features_df.columns)
+    print(features_df[['date', 'city', 'street']].head())
+    # Merge lag features into features_df
+    features_df = features_df.merge(
+        air_quality_df[['date', 'pm2_5_lag_1', 'pm2_5_lag_2', 'pm2_5_lag_3']],
+        on='date',
+        how='left'
+    )
+    
+    feature_cols = ['pm2_5_lag_1', 'pm2_5_lag_2', 'pm2_5_lag_3', 
+                    'wind_speed_10m_max', 'wind_gusts_10m_max', 
+                    'wind_direction_10m_dominant','temperature_2m_max']
+    features_df['predicted_pm25'] = model.predict(features_df[feature_cols])
+    
+    features_df["days_before_forecast_day"] = 1
+    
+    print("FEATURES_DF COLUMNS:", features_df.columns)
+    print(features_df[['date', 'city', 'street']].head())
+    # Build hindcast_df (with true outcomes)
+    hindcast_df = features_df.merge(
+        air_quality_df[['date','pm2_5', 'city', 'street']],
+        on=['date', 'city', 'street'],
+        how='inner'
+    )
+    
+    # df_to_insert = features_df[
+    #     ["city", "street", "date", "days_before_forecast_day", "predicted_pm25"]
+    # ]
+    
+    # df = hindcast_df.drop(columns=['pm2_5'])
+    # df['days_before_forecast_day'] = 1
+    
+    # expected_cols = [f.name for f in monitor_fg.features]
+    # df = df[expected_cols]
+    
+    monitor_fg.insert(features_df, write_options={"wait_for_job": True})
     return hindcast_df
