@@ -15,6 +15,7 @@
     "weather": 1,
     "air_quality": 1,
     "weather_forecast_features": 1,
+    "air_quality_lagged": 1,
     "aq_predictions": 1
   },
   "feature_view": {
@@ -22,7 +23,7 @@
     "version": 2
   },
   "model_registry": {
-    "name": "air_quality_xgboost_model",
-    "version": 2
+    "name": "air_quality_xgboost_model_with_lag_features_2",
+    "version": 1
   }
 }
