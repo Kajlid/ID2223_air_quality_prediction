@@ -1,1 +1,2 @@
 air_quality_model/images/*.png filter=lfs diff=lfs merge=lfs -text
+air_quality_model/images/pm25_hindcast.png filter=lfs diff=lfs merge=lfs -text
