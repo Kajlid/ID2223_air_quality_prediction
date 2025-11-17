@@ -2,6 +2,8 @@
 
 This repository contains scripts and notebooks for downloading, processing, and predicting air quality (PM2.5) from specific air quality sensors in Sweden. The pipelines use Hopsworks Feature Store and GitHub Actions to automate daily updates.
 
+The dashboard app showing predictions of PM2.5 is deployed on HuggingFace and can be viewed here: http://0.0.0.0:8501. 
+
 ## Prerequisites
 - Python 3.10+
 
