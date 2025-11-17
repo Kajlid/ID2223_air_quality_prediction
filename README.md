@@ -13,12 +13,76 @@ pinned: true
 
 This repository contains scripts and notebooks for downloading, processing, and predicting air quality (PM2.5) from specific air quality sensors in Sweden. The pipelines use Hopsworks Feature Store and GitHub Actions to automate daily updates.
 
-The dashboard app showing predictions of PM2.5 is deployed on HuggingFace and can be viewed here: http://0.0.0.0:8501. 
+The dashboard app showing PM2.5 predictions is deployed on a HuggingFace space and can be viewed here: https://huggingface.co/spaces/Kajlid/air-quality. 
+
+## Features
+
+This repository provides a full pipeline for air quality forecasting (PM2.5) using machine learning, including data ingestion, feature engineering, model training, deployment, and monitoring. Key features include:
+
+### 1. Data Collection & Integration
+- Fetches historical air quality data and weather data from external API and local CSV files.
+
+- Stores and manages all features in a Hopsworks Feature Store for reproducible and consistent access.
+
+### 2. Feature Engineering
+
+- Generates lagged features (pm2_5_lag_1, pm2_5_lag_2, pm2_5_lag_3) for time-series prediction.
+
+- Includes weather features like temperature_2m_max, wind_speed_10m_max, wind_gusts_10m_max, and wind_direction_10m_dominant.
+
+- Handles missing data using forward-fill/backward-fill imputation per location.
+
+- Supports daily automated feature updates via pipelines.
+
+### 3. Model Training
+
+- Uses XGBoost regressor for predicting PM2.5 concentrations.
+
+- Performs time-series train/test splitting to avoid data leakage.
+
+- Hyperparameter tuning via cross-validation.
+
+- Stores trained models in the Hopsworks Model Registry.
+
+### 4. Prediction & Monitoring
+
+- Generates daily forecasts for PM2.5 levels at a given (Göteborg Femman in this configuration).
+
+- Supports hindcasting: comparing previous day predictions with actual values.
+
+- Integrated model monitoring: Tracks prediction quality and detects data drift and model degradation.
+
+### 5. Visualization & Dashboard
+
+Streamlit-based interactive dashboard:
+
+- Shows forecast and hindcast data
+
+- Provides plots of PM2.5 trends
+
+- Saves daily plots.
+
+### 6. Automation & Pipelines
+
+- Feature pipeline (pipelines/2_air_quality_feature_pipeline.ipynb) automatically updates features daily.
+
+- Training pipeline (pipelines/3_air_quality_training_pipeline.ipynb) retrains models weekly with the latest data.
+
+- Inference pipeline (pipelines/4_batch_inference_pipeline.ipynb) creates visualizations of model performance for daily monitoring.
+
+- Scheduled with Github Actions for fully automated end-to-end forecasting.
+
+### 7. Extensibility
+
+- Location is configurable via JSON city config files.
+
+- Easy to extend with additional weather or air quality features.
+
 
 ## Prerequisites
 - Python 3.10+
 
-- Conda or virtualenv
+- Conda
 
 - Required Python packages (install via requirements.txt)
 
@@ -26,8 +90,8 @@ The dashboard app showing predictions of PM2.5 is deployed on HuggingFace and ca
 ## Setup
 1. Clone the repository:
 ```
-git clone https://github.com/AxelHolst/ID2223_lab1_legendariskt_basta_gruppen.git
-cd ID2223_lab1_legendariskt_basta_gruppen
+git clone https://github.com/Kajlid/ID2223_air_quality_prediction.git
+cd ID2223_air_quality_prediction
 ```
 2. Create a .env file in the root repository (either by by copying .env.example or by copying the lines below to existing .env file) and paste your Hopsworks API key and project name there (instructions below):
 ```
@@ -135,7 +199,7 @@ jupyter notebook pipelines/4_batch_inference_pipeline.ipynb
 ```
 
 
-## Running the UI
+## Running the UI locally
 
 The dashboard UI in dashboard/streamlit_app.py can be launched with: 
 ```streamlit run dashboard/streamlit_app.py```
@@ -153,7 +217,7 @@ Use the secrets from GitHub Secrets.
 Merge workflows from feature branches to main to activate scheduled runs.
 
 ## Notes
-- All PM2.5 columns must be floats; empty strings or NaNs should be handled with interpolation or removal.
+- All PM2.5 columns must be floats; empty strings or NaNs should be handled with removal or forward/backward filling.
 
 - Increment feature group versions in city_config if schemas change.
 
