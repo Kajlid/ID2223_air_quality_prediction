@@ -1,3 +1,14 @@
+---
+title: Air Quality Prediction
+emoji: 💨
+colorFrom: blue
+colorTo: green
+sdk: streamlit
+sdk_version: "1.28.2"
+app_file: dashboard/streamlit_app.py
+pinned: true
+---
+
 # Air Quality Prediction Pipeline
 
 This repository contains scripts and notebooks for downloading, processing, and predicting air quality (PM2.5) from specific air quality sensors in Sweden. The pipelines use Hopsworks Feature Store and GitHub Actions to automate daily updates.
