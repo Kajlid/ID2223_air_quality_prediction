@@ -5,27 +5,33 @@
     {
       "id": "GBG_FEMMAN",
       "display_name": "Göteborg Femman",
+      "city": "Göteborg",
+      "street": "Femman",
+      "filename": "data/goteborg-femman-air-quality.csv",
       "lat": 57.70805758067377,
       "lon": 11.969179894601
     },
     {
-      "id": "GBG_LUNDEN",
-      "display_name": "Göteborg Lunden",
-      "lat": 57.726,
-      "lon": 12.004
-    },
-    {
-      "id": "BORAS_CENTER",
-      "display_name": "Borås Centrum",
-      "lat": 57.721,
-      "lon": 12.940
+        "id": "GBG_OVRE_HAGA",
+        "display_name": "Göteborg Haga",
+        "city": "Göteborg",
+        "street": "Haga",
+        "filename": "data/goteborg-haga-air-quality.csv",
+        "lat": 57.4155,      
+        "lon": 11.5723
     }
+    
   ],
   "forecast_days": 7,
   "fg_versions": {
-    "weather": 1,
-    "air_quality": 1,
-    "weather_forecast_features": 1,
-    "aq_predictions": 1
+    "weather": 4,
+    "air_quality": 3,
+    "air_quality_lagged": 2,
+    "weather_forecast_features": 2,
+    "aq_predictions": 2
+  },
+  "feature_view": {
+    "name": "air_quality_fv",
+    "version": 4
   }
 }
